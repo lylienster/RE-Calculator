@@ -444,19 +444,6 @@
               }
               calculateProjectionROI={this.calculateProjectionROI}
             />
-            <FiftyPercentRule
-              state={this.state}
-              calculate50PercentRuleROI={this.calculate50PercentRuleROI}
-              calculate50PercentRuleExpenses={
-                this.calculate50PercentRuleExpenses
-              }
-              calculate50PercentRuleMortgage={
-                this.calculate50PercentRuleMortgage
-              }
-              calculate50PercentRuleCashFlow={
-                this.calculate50PercentRuleCashFlow
-              }
-            />
           </div>
         );
       }
@@ -1088,38 +1075,38 @@
     }
 
     // Evaluation
-    class FiftyPercentRule extends React.Component {
-      render() {
-        const {
-          state,
-          calculate50PercentRuleROI,
-          calculate50PercentRuleExpenses,
-          calculate50PercentRuleMortgage,
-          calculate50PercentRuleCashFlow
-        } = this.props;
+    // class FiftyPercentRule extends React.Component {
+    //   render() {
+    //     const {
+    //       state,
+    //       calculate50PercentRuleROI,
+    //       calculate50PercentRuleExpenses,
+    //       calculate50PercentRuleMortgage,
+    //       calculate50PercentRuleCashFlow
+    //     } = this.props;
 
-        return (
-          <div>
-            <h2>50% Rule: {calculate50PercentRuleROI().toFixed(2)}% ROI</h2>
-            <SingleInput
-              inputDisplayName="Expenses"
-              inputValue={calculate50PercentRuleExpenses()}
-              disabled={true}
-            />
-            <SingleInput
-              inputDisplayName="Mortgage"
-              inputValue={calculate50PercentRuleMortgage()}
-              disabled={true}
-            />
-            <SingleInput
-              inputDisplayName="Cash flow"
-              inputValue={calculate50PercentRuleCashFlow()}
-              disabled={true}
-            />
-          </div>
-        );
-      }
-    }
+    //     return (
+    //       <div>
+    //         <h2>50% Rule: {calculate50PercentRuleROI().toFixed(2)}% ROI</h2>
+    //         <SingleInput
+    //           inputDisplayName="Expenses"
+    //           inputValue={calculate50PercentRuleExpenses()}
+    //           disabled={true}
+    //         />
+    //         <SingleInput
+    //           inputDisplayName="Mortgage"
+    //           inputValue={calculate50PercentRuleMortgage()}
+    //           disabled={true}
+    //         />
+    //         <SingleInput
+    //           inputDisplayName="Cash flow"
+    //           inputValue={calculate50PercentRuleCashFlow()}
+    //           disabled={true}
+    //         />
+    //       </div>
+    //     );
+    //   }
+    // }
 
     const rootElement = document.getElementById("root");
     const element = <Calculator />;
