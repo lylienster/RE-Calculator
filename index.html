@@ -26,6 +26,21 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
   <script type="text/babel">
+
+    Number.prototype.toCurrency = function(){
+      console.log("this.valueOf: " + this.valueOf());
+
+      if (isNaN(this.valueOf()))
+      {
+        return 0;
+      }
+
+      const formattedValue =  this.valueOf().toLocaleString(undefined, {maximumFractionDigits:2});
+      console.log("formattedValue: " + formattedValue);
+
+      return formattedValue;
+    }
+    
     class Calculator extends React.Component {
       constructor(props) {
         super(props);
@@ -173,8 +188,10 @@
       }
 
       calculateLoan() {
+        const purchasePrice = this.state.purchasePrice || 0;
+
         const loan =
-          (this.state.purchasePrice *
+          (purchasePrice *
             (100 - this.state.downPaymentPercentage)) /
           100;
 
@@ -194,7 +211,6 @@
       calculateOutOfPocket() {
         const totalProjectCost = this.calculateTotalProjectCost();
         const loan = this.calculateLoan(this.state.downPaymentPercentage);
-
         var outOfPocket = totalProjectCost - loan;
 
         return outOfPocket;
@@ -531,7 +547,7 @@
 
         return (
           <div>
-            <h2>1) Total Project Cost: ${totalProjectCost}</h2>
+            <h2>1) Total Project Cost: ${totalProjectCost.toCurrency()}</h2>
             <SingleInput
               inputDisplayName="Purchase Price"
               inputValue={purchasePrice}
@@ -603,7 +619,7 @@
         const outOfPocket = calculateOutOfPocket();
         return (
           <div>
-            <h2>2) Total Cost Out of Pocket: ${calculateOutOfPocket()}</h2>
+            <h2>2) Total Cost Out of Pocket: ${calculateOutOfPocket().toCurrency()}</h2>
 
 
             <MonthYearPercentInput
@@ -651,12 +667,12 @@
         var monthlyMortgagePayment = calculateMonthlyMortgagePayment(
           loanPeriod,
           interestRate
-        ).toFixed(2);
+        );
 
         return (
           <div>
             <h2>
-              3) Monthly Mortgage Payment: ${monthlyMortgagePayment}
+              3) Monthly Mortgage Payment: ${monthlyMortgagePayment.toCurrency()}
               /mo.
             </h2>
             <SingleInput
@@ -690,7 +706,7 @@
 
         return (
           <div>
-            <h2>4) Total Income: $ {rent}/mo.</h2>
+            <h2>4) Total Income: $ {Number(rent).toCurrency()}/mo.</h2>
             <SingleInput
               inputDisplayName="Rent"
               inputValue={rent}
@@ -717,12 +733,12 @@
           updateStateValue
         } = this.props;
 
-        const mortgage = calculateMonthlyMortgagePayment().toFixed(2);
+        const mortgage = calculateMonthlyMortgagePayment().toCurrency();
 
         return (
           <div>
             <h2>
-              5) Total Expenses: $ {calculateTotalExpenses().toFixed(2)}/mo.
+              5) Total Expenses: $ {calculateTotalExpenses().toCurrency()}/mo.
             </h2>
             <SingleInput
               inputDisplayName="Mortgage"
@@ -837,7 +853,7 @@
 
             <SingleInput
               inputDisplayName="Total Expenses"
-              inputValue={calculateTotalExpenses().toFixed(2)}
+              inputValue={calculateTotalExpenses()}
               disabled={true}
             />
           </div>
@@ -944,13 +960,16 @@
           disabled,
           prependValue,
           appendValue,
-          required
+          required,
+          roundValue=true
         } = this.props;
 
         let isInvalid = "";
         if (required && !inputValue){
           isInvalid = "is-invalid"
         }
+
+        const value = (roundValue ? Math.ceil(inputValue) : inputValue);
 
         return (
           <div class="input-group row py-1 ">
@@ -963,7 +982,7 @@
                 <input class={"form-control " + isInvalid}
                   type="number"
                   name={inputName}
-                  value={Math.ceil(inputValue)}
+                  value={value}
                   onChange={handleChange}
                   disabled={disabled ? "disabled" : ""}
                 />
@@ -1084,98 +1103,100 @@
         return (
           <div>
             <h2>7) Projection</h2>
-            <div>
-              Year:{" "}
-              <input 
-                type="number"
-                value={state.projectionYear}
-                name="projectionYear"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              After Repair Value (ARV):{" $"}
-              <input
-                type="number"
-                value={state.afterRepairValue}
-                name="afterRepairValue"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              Appreciation:{" "}
-              <input
-                type="number"
-                value={state.appreciation}
-                name="appreciation"
-                onChange={handleChange}
-              />
-              % (National Average: 4.4%)
-            </div>
-            <div>
-              Sale Price:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionSalePrice().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              Sale Expenses:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionSaleExpenses().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              Loan Payoff:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionLoanPayoff().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              Total Invested Capital:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionTotalInvestedCapital().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              Profit:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionSaleProfit().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              Total cashflow:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionTotalCashflow().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              Total Profit (with cashflow):{" $"}
-              <input
-                type="number"
-                value={calculateProjectionTotalProfit().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              ROI:{" $"}
-              <input
-                type="number"
-                value={calculateProjectionROI().toFixed(2)}
-                disabled
-              />
-            </div>
+          
+            <SingleInput
+              inputDisplayName="Year"
+              inputValue={state.projectionYear}
+              inputName="projectionYear"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="yr."
+            />
+
+
+            <SingleInput
+              inputDisplayName="After Repair Value (ARV)"
+              inputValue={state.afterRepairValue}
+              inputName="afterRepairValue"
+              handleChange={handleChange}
+              prependValue="$"
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Appreciation"
+              inputValue={state.appreciation}
+              inputName="appreciation"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="%"
+              roundValue={false}
+              additionalInfoText="(National Average: 4.4%)"
+            />
+            
+            <SingleInput
+              inputDisplayName="Sale Price"
+              inputValue={calculateProjectionSalePrice()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+           
+            <SingleInput
+              inputDisplayName="Sale Expenses"
+              inputValue={calculateProjectionSaleExpenses()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Loan Payoff"
+              inputValue={calculateProjectionLoanPayoff()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Total Invested Capital"
+              inputValue={calculateProjectionTotalInvestedCapital()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Profit"
+              inputValue={calculateProjectionSaleProfit()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Total cashflow"
+              inputValue={calculateProjectionTotalCashflow()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Total Profit (with cashflow)"
+              inputValue={calculateProjectionTotalProfit()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="ROI"
+              inputValue={calculateProjectionROI()}
+              prependValue=" "
+              appendValue="%"
+              disabled={true}
+            />
           </div>
         );
       }
@@ -1194,7 +1215,7 @@
 
     //     return (
     //       <div>
-    //         <h2>50% Rule: {calculate50PercentRuleROI().toFixed(2)}% ROI</h2>
+    //         <h2>50% Rule: {calculate50PercentRuleROI().toCurrency()}% ROI</h2>
     //         <SingleInput
     //           inputDisplayName="Expenses"
     //           inputValue={calculate50PercentRuleExpenses()}
