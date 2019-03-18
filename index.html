@@ -390,7 +390,10 @@
             <h1 class="text-center">RE Calculator</h1>
 
             <form>
-              <Part0 askingPrice={this.state.askingPrice} />
+              <Part0 
+                askingPrice={this.state.askingPrice} 
+                handleChange={e => this.handleChange(e)}
+              />
 
               <br/>
 
@@ -401,11 +404,13 @@
                 preRentHoldingCosts={this.state.preRentHoldingCosts}
                 calculateTotalProjectCost={this.calculateTotalProjectCost}
                 handleChange={e => this.handleChange(e)}
+
               />
               
               <br/>
 
               <Part2
+                state={this.state}
                 downPaymentPercentage={this.state.downPaymentPercentage}
                 downPayment={this.state.downPayment}
                 handleChange={e => this.handleChange(e)}
@@ -413,6 +418,8 @@
                 calculateLoan={this.calculateLoan}
                 calculateOutOfPocket={this.calculateOutOfPocket}
                 handleDownPaymentChange={e => this.handleDownPaymentChange(e)}
+                updateStateValue={this.updateStateValue}
+                calculateValueByPercentage={this.calculateValueByPercentage}
               />
 
               <br/>
@@ -489,12 +496,19 @@
 
     class Part0 extends React.Component {
       render() {
-        const { askingPrice } = this.props;
+        const { askingPrice, handleChange } = this.props;
         return (
           <div>
-            Asking Price:{" "}
-            <input type="number" min="0.01" step="0.01" value={askingPrice} />
+            <SingleInput
+              inputDisplayName="Asking Price"
+              inputValue={askingPrice}
+              inputName="askingPrice"
+              handleChange={handleChange}
+              appendValue=" "
+            />
           </div>
+         
+          
         );
       }
     }
@@ -518,48 +532,46 @@
         return (
           <div>
             <h2>1) Total Project Cost: ${totalProjectCost}</h2>
-            <div>
-              Purchase Price:{" $"}
-              <input
-                type="number"
-                step="0.01"
-                value={purchasePrice}
-                name="purchasePrice"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              Purchase Closing Costs:{" $"}
-              <input
-                type="number"
-                step="0.01"
-                value={purchaseClosingCosts}
-                name="purchaseClosingCosts"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              Pre-Rent Holding Costs:{" $"}
-              <input
-                type="number"
-                value={preRentHoldingCosts}
-                name="preRentHoldingCosts"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              Estimated Repairs:{" $"}
-              <input
-                type="number"
-                value={estimatedRepairs}
-                name="estimatedRepairs"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              Total Project Cost:{" $"}
-              <input type="number" value={totalProjectCost} disabled />
-            </div>
+            <SingleInput
+              inputDisplayName="Purchase Price"
+              inputValue={purchasePrice}
+              inputName="purchasePrice"
+              handleChange={handleChange}
+              appendValue=" "
+              required="true"
+            />
+
+            <SingleInput
+              inputDisplayName="Purchase Closing Costs"
+              inputValue={purchaseClosingCosts}
+              inputName="purchaseClosingCosts"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Pre-Rent Holding Costs"
+              inputValue={preRentHoldingCosts}
+              inputName="preRentHoldingCosts"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Estimated Repairs"
+              inputValue={estimatedRepairs}
+              inputName="estimatedRepairs"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Total Project Cost"
+              inputValue={totalProjectCost}
+              appendValue=" "
+              disabled={true}
+            />
+
           </div>
         );
       }
@@ -580,7 +592,10 @@
           caculateDownPayment,
           handleDownPaymentChange,
           calculateLoan,
-          calculateOutOfPocket
+          calculateOutOfPocket,
+          updateStateValue,
+          calculateValueByPercentage,
+          state
         } = this.props;
 
         const downPayment = caculateDownPayment();
@@ -589,31 +604,33 @@
         return (
           <div>
             <h2>2) Total Cost Out of Pocket: ${calculateOutOfPocket()}</h2>
-            <div>
-              Down Payment :{" $"}
-              <input
-                type="number"
-                step="0.01"
-                value={downPayment}
-                onChange={handleDownPaymentChange}
-              />{" "}
-              <input
-                type="number"
-                step="0.01"
-                value={downPaymentPercentage}
-                name="downPaymentPercentage"
-                onChange={handleChange}
-              />
-              %
-            </div>
-            <div>
-              Loan :{" $"}
-              <input type="number" step="0.01" value={loan} disabled />
-            </div>
-            <div>
-              Out of Pocket :{" $"}
-              <input type="number" step="0.01" value={outOfPocket} disabled />
-            </div>
+
+
+            <MonthYearPercentInput
+              inputDisplayName="Down Payment"
+              inputName="downPaymentPercentage"
+              percentageValue={state.downPaymentPercentage}
+              wholeMonthlyValue={state.purchasePrice}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+              monthAppendValue=" "
+              disableYear={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Loan"
+              inputValue={loan}
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Out of Pocket"
+              inputValue={outOfPocket}
+              appendValue=" "
+              disabled={true}
+            />
           </div>
         );
       }
@@ -642,27 +659,23 @@
               3) Monthly Mortgage Payment: ${monthlyMortgagePayment}
               /mo.
             </h2>
-            <div>
-              Loan Period:{" "}
-              <input
-                type="number"
-                value={loanPeriod}
-                name="loanPeriod"
-                onChange={handleChange}
-              />
-              years
-            </div>
-            <div>
-              Interest Rate :{" "}
-              <input
-                type="number"
-                // step=".01"
-                value={interestRate}
-                name="interestRate"
-                onChange={handleChange}
-              />
-              %
-            </div>
+            <SingleInput
+              inputDisplayName="Loan Period"
+              inputValue={loanPeriod}
+              inputName="loanPeriod"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="years"
+            />
+       
+            <SingleInput
+              inputDisplayName="Interest Rate"
+              inputValue={interestRate}
+              inputName="interestRate"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="%"
+            />
           </div>
         );
       }
@@ -678,16 +691,13 @@
         return (
           <div>
             <h2>4) Total Income: $ {rent}/mo.</h2>
-            <div>
-              Rent:{" "}
-              <input
-                type="number"
-                value={rent}
-                name="rent"
-                onChange={handleChange}
-              />
-              /mo.
-            </div>
+            <SingleInput
+              inputDisplayName="Rent"
+              inputValue={rent}
+              inputName="rent"
+              handleChange={handleChange}
+              required
+            />
           </div>
         );
       }
@@ -714,11 +724,12 @@
             <h2>
               5) Total Expenses: $ {calculateTotalExpenses().toFixed(2)}/mo.
             </h2>
-            <div>
-              Mortgage:{" $"}
-              <input type="number" value={mortgage} disabled />
-              /mo.
-            </div>
+            <SingleInput
+              inputDisplayName="Mortgage"
+              inputValue={mortgage}
+              disabled={true}
+            />
+
             <MonthYearPercentInput
               inputDisplayName="Vacancy"
               inputName="vacancyRate"
@@ -823,14 +834,12 @@
               updateStateValue={updateStateValue}
               calculateValueByPercentage={calculateValueByPercentage}
             />
-            <div>
-              Total Expenses :{" $"}
-              <input
-                type="number"
-                value={calculateTotalExpenses().toFixed(2)}
-                disabled
-              />
-            </div>
+
+            <SingleInput
+              inputDisplayName="Total Expenses"
+              inputValue={calculateTotalExpenses().toFixed(2)}
+              disabled={true}
+            />
           </div>
         );
       }
@@ -846,13 +855,36 @@
           wholeMonthlyValue,
           handleChange,
           updateStateValue,
-          calculateValueByPercentage
+          calculateValueByPercentage,
+          disableYear,
+          monthAppendValue
         } = this.props;
 
         const monthlyValue = calculateValueByPercentage(
           wholeMonthlyValue,
           percentageValue
         );
+
+        let yearInput;
+        if(!disableYear){
+          yearInput = <div  class="col-md-3">
+              <div class="input-group">
+                <input className="form-control"
+                  type="number"
+                  value={Math.ceil(monthlyValue * 12)}
+                  onChange={e =>
+                    updateStateValue(
+                      (Number(e.target.value) / 12 / wholeMonthlyValue) * 100,
+                      inputName
+                    )
+                  }
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">/yr.</span>
+                </div>
+              </div>
+            </div>
+        }
 
         return (
           <div  class="input-group row py-1">
@@ -873,27 +905,13 @@
                   }
                 />
                 <div class="input-group-append">
-                  <span class="input-group-text">/mo.</span>
+                  <span class="input-group-text">{monthAppendValue || "/mo."}</span>
                 </div>
               </div>
             </div>
-            <div  class="col-md-3">
-              <div class="input-group">
-                <input className="form-control"
-                  type="number"
-                  value={Math.ceil(monthlyValue * 12)}
-                  onChange={e =>
-                    updateStateValue(
-                      (Number(e.target.value) / 12 / wholeMonthlyValue) * 100,
-                      inputName
-                    )
-                  }
-                />
-                <div class="input-group-append">
-                  <span class="input-group-text">/yr.</span>
-                </div>
-              </div>
-            </div>
+
+            {yearInput}
+
             <div  class="col-md-3">
               <div class="input-group">
                 <input className="form-control"
@@ -923,21 +941,38 @@
           inputValue,
           additionalInfoText,
           handleChange,
-          disabled
+          disabled,
+          prependValue,
+          appendValue,
+          required
         } = this.props;
 
+        let isInvalid = "";
+        if (required && !inputValue){
+          isInvalid = "is-invalid"
+        }
+
         return (
-          <div>
-            {inputDisplayName}
-            {": $"}
-            <input
-              type="number"
-              name={inputName}
-              value={Math.ceil(inputValue)}
-              onChange={handleChange}
-              disabled={disabled ? "disabled" : ""}
-            />
-            {additionalInfoText}
+          <div class="input-group row py-1 ">
+            <label  class="col-md-2">{inputDisplayName}</label>
+            <div class="col-md-4">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">{prependValue || "$"}</span>
+                </div>
+                <input class={"form-control " + isInvalid}
+                  type="number"
+                  name={inputName}
+                  value={Math.ceil(inputValue)}
+                  onChange={handleChange}
+                  disabled={disabled ? "disabled" : ""}
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">{appendValue || "/mo."}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">{additionalInfoText}</div>
           </div>
         );
       }
@@ -1004,28 +1039,26 @@
         return (
           <div>
             <h2>6) Evaluation</h2>
-            <div>
-              Cashflow:{" $"}
-              <input
-                type="number"
-                value={calculateMonthlyCashFlow().toFixed(2)}
-                disabled
-              />
-            </div>
-            <div>
-              ROI (without mortgage):{" "}
-              <input
-                type="number"
-                value={calculateROIWithoutMortgage().toFixed(2)}
-                disabled
-              />
-              %
-            </div>
-            <div>
-              ROI:{" "}
-              <input type="number" value={calculateROI().toFixed(2)} disabled />
-              %
-            </div>
+            <SingleInput
+              inputDisplayName="Cashflow"
+              inputValue={calculateMonthlyCashFlow().toFixed(2)}
+              appendValue=" "
+              disabled={true}
+            />
+            <SingleInput
+              inputDisplayName="ROI (without mortgage)"
+              inputValue={calculateROIWithoutMortgage().toFixed(2)}
+              prependValue=" "
+              appendValue="%"
+              disabled={true}
+            />
+            <SingleInput
+              inputDisplayName="ROI"
+              inputValue={calculateROI().toFixed(2)}
+              prependValue=" "
+              appendValue="%"
+              disabled={true}
+            />
           </div>
         );
       }
