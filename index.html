@@ -177,6 +177,11 @@
         const loanPeriod = this.state.loanPeriod;
         const interestRate = this.state.interestRate;
 
+        // allow calculation for 0% interest rate
+        if (!interestRate){
+          return loan/(loanPeriod * 12);
+        }
+
         // https://www.thebalance.com/calculate-mortgage-315668
         // P = A/D where D = {[(1 + i) ^n] - 1} / [i(1 + i)^n]
         var n = loanPeriod * 12; // 12 months
