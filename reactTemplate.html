@@ -27,10 +27,109 @@
 	<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"> </script>
 	<!-- import react-dom.js -->
 
+	<!-- <script src="https://unpkg.com/react-use-localstorage@3.4.1/dist/react-use-localstorage.cjs.development.js">
+	</script> -->
+	<!-- import localstorage.js -->
+
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
 		integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
 	<script type="text/babel">
+
+		// function useLocalStorage(key, initialValue) {
+		// 	debugger;
+		// 	if (initialValue === void 0) {
+		// 		initialValue = '';
+		// 	}
+
+		// 	var _useState = React.useState(function () {
+		// 		return window.localStorage.getItem(key) || initialValue;
+		// 	}),
+		// 		value = _useState[0],
+		// 		setValue = _useState[1];
+
+		// 	var setItem = function setItem(newValue) {
+		// 		setValue(newValue);
+		// 		window.localStorage.setItem(key, newValue);
+		// 	};
+
+		// 	React.useEffect(function () {
+		// 		var newValue = window.localStorage.getItem(key);
+
+		// 		if (value !== newValue) {
+		// 		setValue(newValue || initialValue);
+		// 		}
+		// 	});
+		// 	var handleStorage = React.useCallback(function (event) {
+		// 		if (event.key === key && event.newValue !== value) {
+		// 		setValue(event.newValue || initialValue);
+		// 		}
+		// 	}, [value]);
+		// 	React.useEffect(function () {
+		// 		window.addEventListener('storage', handleStorage);
+		// 		return function () {
+		// 		return window.removeEventListener('storage', handleStorage);
+		// 		};
+		// 	}, [handleStorage]);
+		// 	return [value, setItem];
+		// }
+
+		function useLocalStorage(key, initialValue) {
+			// State to store our value
+			// Pass initial state function to useState so logic is only executed once
+			const [storedValue, setStoredValue] = React.useState(() => {
+				try {
+				// Get from local storage by key
+				const item = window.localStorage.getItem(key);
+				// Parse stored json or if none return initialValue
+				return item ? JSON.parse(item) : initialValue;
+				} catch (error) {
+				// If error also return initialValue
+				console.log(error);
+				return initialValue;
+				}
+			});
+
+			// Return a wrapped version of useState's setter function that ...
+			// ... persists the new value to localStorage.
+			const setValue = value => {
+				try {
+				// Allow value to be a function so we have same API as useState
+				const valueToStore =
+					value instanceof Function ? value(storedValue) : value;
+				// Save state
+				setStoredValue(valueToStore);
+				// Save to local storage
+				window.localStorage.setItem(key, JSON.stringify(valueToStore));
+				} catch (error) {
+				// A more advanced implementation would handle the error case
+				console.log(error);
+				}
+			};
+
+			return [storedValue, setValue];
+		}
+		// Helper functions
+
+		const Helpers = (() => {
+
+			const calculateTotalProjectCost = ({purchasePrice, estimatedRepairs, purchaseClosingCosts, preRentHoldingCosts } = form) => {
+				const totalProjectCost =
+				(purchasePrice || 0) +
+				(estimatedRepairs || 0) +
+				(purchaseClosingCosts || 0) +
+				(preRentHoldingCosts || 0);
+				return totalProjectCost;
+			}
+			
+			return {
+				calculateTotalProjectCost: calculateTotalProjectCost
+			}
+		})();
+
+
+		
+		// end of Helper Functions
 
 		const TestComponent = ({date}) => {
 			const [time, setTime] = React.useState(date.toLocaleTimeString());
@@ -71,10 +170,6 @@
 				isInvalid = "is-invalid"
 			}
 
-			// const handleChange = (event) => {
-			// 	setValue(event.target.value)
-			// };
-
 			const value = (roundValue ? Math.ceil(inputValue) : inputValue);
 
 			return (
@@ -102,15 +197,7 @@
 			);
 		}
 
-		const Part0 = ({ form, setState } = props) => {
-
-			const handleOnChange = (e) => {
-				setState({
-					...form,
-					[e.target.name]: e.target.value
-				});
-			};
-
+		const Part0 = ({ form, handleOnChange } = props) => {
 
 			return (
 				<div>
@@ -127,44 +214,103 @@
 
 		// Total Project Cost
 		const Part1 = ({
-          purchasePrice,
-          handleChange,
-          estimatedRepairs,
-          purchaseClosingCosts,
-          preRentHoldingCosts,
-          totalProjectCost
+			form,
+			handleChange
         } = props) => {
-
 			return (
 				<div>
-					<h2>1) Total Project Cost: ${totalProjectCost.toCurrency()}</h2>
+					<h2>1) Total Project Cost: ${Helpers.calculateTotalProjectCost(form)}</h2>
 					<SingleInput
-					inputDisplayName="Purchase Price"
-					inputValue={purchasePrice}
-					inputName="purchasePrice"
-					handleChange={handleChange}
-					appendValue=" "
-					required="true"
+						inputDisplayName="Purchase Price"
+						inputValue={form.purchasePrice}
+						inputName="purchasePrice"
+						handleChange={handleChange}
+						required="true"
 					/>
-
-					
 				</div>
         );
     }
-		const Container = () => {
-			const [form, setState] = React.useState({
+		
+	
+		const Defaults = ({defaults, handleDefaultsOnChange} = props) => {
 
+			return (
+				<form>
+					<div>
+						<SingleInput
+							label="Default Purchase Closing Costs"
+							inputName="purchaseClosingCosts"
+							inputValue={defaults.purchaseClosingCosts}
+							handleOnChange={handleDefaultsOnChange}
+							prefix={"$"}
+						/>
+						<SingleInput
+							label="Default Loan Period"
+							inputName="loadPeriod"
+							inputValue={defaults.loadPeriod}
+							handleOnChange={handleDefaultsOnChange}
+							suffix={"years"}
+						/>
+						<SingleInput
+							label="Default Interest Rate"
+							inputName="interestRate"
+							inputValue={defaults.interestRate}
+							handleOnChange={handleDefaultsOnChange}
+							suffix={"%"}
+						/>
+					</div>
+				</form>
+			);
+		};
+
+
+		const Container = () => {
+			const [defaults, setDefaults] = useLocalStorage('defaults',"");
+			const defaultsObject = defaults ? JSON.parse(defaults) : {};
+			const [form, setState] = React.useState({
+				...defaultsObject
 			});
+
+
+			React.useEffect(() => {
+			}, [defaultsObject]);
+
+			const handleOnChange = (e) => {
+				setState({
+					...form,
+					[e.target.name]: Number(e.target.value)
+				});
+
+			};
+
+			const handleDefaultsOnChange = (e) => {
+				const newDefaultsObject = {
+					...defaultsObject,
+					[e.target.name]: Number(e.target.value)
+				};
+
+				const newDefaults = JSON.stringify(newDefaultsObject);
+
+				setDefaults(newDefaults);
+				const newForm = {...form, ...newDefaultsObject};
+				setState(newForm);
+			};
 
 			return (
 				<div className="container">
 					<h1 className="text-center">RE Calculator</h1>
+					
+					<hr className="solid"/>
+					<Defaults defaults={defaultsObject} handleDefaultsOnChange={handleDefaultsOnChange}/>
 					<form>
 						<Part0
 							form={form}
-							setState={setState}
+							handleOnChange={handleOnChange}
 						/>
-						{form.askingPrice}
+						<Part1 
+							form={form} 
+							handleOnChange={handleOnChange}
+						/>
 					</form>
 				</div>
 			);
