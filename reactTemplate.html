@@ -31,48 +31,30 @@
 	</script> -->
 	<!-- import localstorage.js -->
 
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-		integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"> </script> -->
+	<!-- import bootstrap.js -->
+
+	<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+		integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"> -->
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+		integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+
+	<!-- <script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script> -->
+
+	<!-- // <script
+	// 	src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"
+	// 	crossorigin
+	// /> -->
+
+	<script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
+
+	<!-- // <script>
+		var Alert = ReactBootstrap.Alert;
+	</script> -->
+
 
 	<script type="text/babel">
-
-		// function useLocalStorage(key, initialValue) {
-		// 	debugger;
-		// 	if (initialValue === void 0) {
-		// 		initialValue = '';
-		// 	}
-
-		// 	var _useState = React.useState(function () {
-		// 		return window.localStorage.getItem(key) || initialValue;
-		// 	}),
-		// 		value = _useState[0],
-		// 		setValue = _useState[1];
-
-		// 	var setItem = function setItem(newValue) {
-		// 		setValue(newValue);
-		// 		window.localStorage.setItem(key, newValue);
-		// 	};
-
-		// 	React.useEffect(function () {
-		// 		var newValue = window.localStorage.getItem(key);
-
-		// 		if (value !== newValue) {
-		// 		setValue(newValue || initialValue);
-		// 		}
-		// 	});
-		// 	var handleStorage = React.useCallback(function (event) {
-		// 		if (event.key === key && event.newValue !== value) {
-		// 		setValue(event.newValue || initialValue);
-		// 		}
-		// 	}, [value]);
-		// 	React.useEffect(function () {
-		// 		window.addEventListener('storage', handleStorage);
-		// 		return function () {
-		// 		return window.removeEventListener('storage', handleStorage);
-		// 		};
-		// 	}, [handleStorage]);
-		// 	return [value, setItem];
-		// }
 
 		function useLocalStorage(key, initialValue) {
 			// State to store our value
@@ -109,6 +91,7 @@
 
 			return [storedValue, setValue];
 		}
+		
 		// Helper functions
 
 		const Helpers = (() => {
@@ -128,29 +111,21 @@
 		})();
 
 
-		
-		// end of Helper Functions
+		Number.prototype.toCurrency = function(){
+			console.log("this.valueOf: " + this.valueOf());
 
-		const TestComponent = ({date}) => {
-			const [time, setTime] = React.useState(date.toLocaleTimeString());
-			const [url, setUrl] = React.useState("");
-			const handleClick = () => {
-				setTime(new Date().toLocaleTimeString());
-			};
+			if (isNaN(this.valueOf()))
+			{
+				return 0;
+			}
 
-			React.useEffect(() => {
-				setUrl(document.location.href)
-			}, []);
+			const formattedValue =  this.valueOf().toLocaleString(undefined, {maximumFractionDigits:2});
+			console.log("formattedValue: " + formattedValue);
 
-			return (
-				<React.Fragment>
-					<div>{`Time: ${time}`}</div>
-					<div>{`URL: ${url}`}</div>
-					<button type="button" onClick={handleClick}>Update</button>
-				</React.Fragment>
-			);
+			return formattedValue;
 		}
 
+		// end of Helper Functions
 
 		const SingleInput = ({
 		  label,
@@ -215,62 +190,129 @@
 		// Total Project Cost
 		const Part1 = ({
 			form,
-			handleChange
+			handleOnChange
         } = props) => {
 			return (
 				<div>
-					<h2>1) Total Project Cost: ${Helpers.calculateTotalProjectCost(form)}</h2>
+					<h2>1) Total Project Cost: ${Helpers.calculateTotalProjectCost(form).toCurrency()}</h2>
 					<SingleInput
-						inputDisplayName="Purchase Price"
+						label="Purchase Price"
 						inputValue={form.purchasePrice}
 						inputName="purchasePrice"
-						handleChange={handleChange}
+						handleOnChange={handleOnChange}
+						prefix={"$"}
 						required="true"
 					/>
+					<SingleInput
+						label="Purchase Closing Costs"
+						inputValue={form.purchaseClosingCosts}
+						inputName="purchaseClosingCosts"
+						handleOnChange={handleOnChange}
+						prefix={"$"}
+					/>
+
+					<SingleInput
+						label="Pre-Rent Holding Costs"
+						inputValue={form.preRentHoldingCosts}
+						inputName="preRentHoldingCosts"
+						handleOnChange={handleOnChange}
+						prefix={"$"}
+					/>
+
+					<SingleInput
+						label="Estimated Repairs"
+						inputValue={form.estimatedRepairs}
+						inputName="estimatedRepairs"
+						handleOnChange={handleOnChange}
+						prefix={"$"}
+					/>
+
+					<SingleInput
+						label="Total Project Cost"
+						inputValue={Helpers.calculateTotalProjectCost(form)}
+						prefix={"$"}
+						disabled={true}
+					/>
 				</div>
-        );
-    }
-		
+        	);
+    	}
 	
-		const Defaults = ({defaults, handleDefaultsOnChange} = props) => {
+		const Defaults = ({defaults, handleOnSubmit} = props) => {
+
+			const [localDefaults, setLocalDefaults] = React.useState({...defaults});
+
+			const handleOnChange = (event) => {
+				setLocalDefaults({
+					...localDefaults,
+					[event.target.name]: Number(event.target.value)
+				});
+			};
+
+			const [showModal, setShowModal] = React.useState(false);
+
+			const handleClose = () => setShowModal(false);
+			const handleShow = () => setShowModal(true);
+
+			const handleOnSumbit = () => {
+				handleOnSubmit(localDefaults);
+
+				handleClose();
+			};
 
 			return (
-				<form>
-					<div>
-						<SingleInput
-							label="Default Purchase Closing Costs"
-							inputName="purchaseClosingCosts"
-							inputValue={defaults.purchaseClosingCosts}
-							handleOnChange={handleDefaultsOnChange}
-							prefix={"$"}
-						/>
-						<SingleInput
-							label="Default Loan Period"
-							inputName="loadPeriod"
-							inputValue={defaults.loadPeriod}
-							handleOnChange={handleDefaultsOnChange}
-							suffix={"years"}
-						/>
-						<SingleInput
-							label="Default Interest Rate"
-							inputName="interestRate"
-							inputValue={defaults.interestRate}
-							handleOnChange={handleDefaultsOnChange}
-							suffix={"%"}
-						/>
-					</div>
-				</form>
+				<React.Fragment>
+					<ReactBootstrap.Button variant="primary" onClick={handleShow} className="float-right">
+						Edit Defaults
+					</ReactBootstrap.Button>
+					<ReactBootstrap.Modal show={showModal} onHide={handleClose} size="lg">
+						<ReactBootstrap.Modal.Header closeButton>
+						<ReactBootstrap.Modal.Title>Defaults</ReactBootstrap.Modal.Title>
+						</ReactBootstrap.Modal.Header>
+						<ReactBootstrap.Modal.Body>
+							<form>
+								<div>
+									<SingleInput
+										label="Default Purchase Closing Costs"
+										inputName="purchaseClosingCosts"
+										inputValue={localDefaults.purchaseClosingCosts}
+										handleOnChange={handleOnChange}
+										prefix={"$"}
+									/>
+									<SingleInput
+										label="Default Loan Period"
+										inputName="loanPeriod"
+										inputValue={localDefaults.loanPeriod}
+										handleOnChange={handleOnChange}
+										suffix={"years"}
+									/>
+									<SingleInput
+										label="Default Interest Rate"
+										inputName="interestRate"
+										inputValue={localDefaults.interestRate}
+										handleOnChange={handleOnChange}
+										suffix={"%"}
+									/>
+								</div>
+							</form>	
+						</ReactBootstrap.Modal.Body>
+						<ReactBootstrap.Modal.Footer>
+						<ReactBootstrap.Button variant="primary" onClick={handleOnSumbit}>
+							Save Changes
+						</ReactBootstrap.Button>
+						</ReactBootstrap.Modal.Footer>
+					</ReactBootstrap.Modal>
+				</React.Fragment>
 			);
 		};
 
-
 		const Container = () => {
 			const [defaults, setDefaults] = useLocalStorage('defaults',"");
+			// const [defaults, setDefaults] = React.useState({});
+
 			const defaultsObject = defaults ? JSON.parse(defaults) : {};
 			const [form, setState] = React.useState({
 				...defaultsObject
 			});
-
 
 			React.useEffect(() => {
 			}, [defaultsObject]);
@@ -283,16 +325,11 @@
 
 			};
 
-			const handleDefaultsOnChange = (e) => {
-				const newDefaultsObject = {
-					...defaultsObject,
-					[e.target.name]: Number(e.target.value)
-				};
+			const handleDefaultsSubmission = (newDefaults) => {
+				const newDefaultsString = JSON.stringify(newDefaults);
 
-				const newDefaults = JSON.stringify(newDefaultsObject);
-
-				setDefaults(newDefaults);
-				const newForm = {...form, ...newDefaultsObject};
+				setDefaults(newDefaultsString);
+				const newForm = {...form, ...newDefaults};
 				setState(newForm);
 			};
 
@@ -301,7 +338,7 @@
 					<h1 className="text-center">RE Calculator</h1>
 					
 					<hr className="solid"/>
-					<Defaults defaults={defaultsObject} handleDefaultsOnChange={handleDefaultsOnChange}/>
+					<Defaults defaults={defaultsObject} handleOnSubmit={handleDefaultsSubmission}/>
 					<form>
 						<Part0
 							form={form}
