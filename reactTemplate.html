@@ -209,13 +209,145 @@
         return totalExpenses;
       };
 
+      const calculateMonthlyCashFlow = form => {
+        const cashflow = form.rent - calculateTotalExpenses(form);
+
+        return cashflow;
+      };
+
+      const calculateROIWithoutMortgage = form => {
+        const totalExpensesWithoutMortgage =
+          calculateTotalExpenses(form) - calculateMonthlyMortgagePayment(form);
+
+        const ROIWithoutMortgage =
+          (((form.rent - totalExpensesWithoutMortgage) * 12) /
+            calculateOutOfPocket(form)) *
+          100;
+
+        return ROIWithoutMortgage;
+      };
+
+      const calculateROI = form => {
+        const cashflow = calculateMonthlyCashFlow(form);
+        const ROI = ((cashflow * 12) / calculateOutOfPocket(form)) * 100;
+
+        return ROI;
+      };
+
+      const calculateProjectionSalePrice = ({
+        afterRepairValue,
+        appreciation,
+        projectionYear
+      }) => {
+        // calculate compound interest
+        // A = P(1 + r/n)^(nt) where P = principal, r = rate, n = compound (1 if annualy) and t = time (in years)
+        const salePrice =
+          afterRepairValue * Math.pow(1 + appreciation / 100, projectionYear);
+
+        return salePrice;
+      };
+
+      const calculateProjectionSaleExpenses = ({ afterRepairValue } = form) => {
+        // 6% agent cost, $4000 closing costs, $5000 new paint cost
+        const saleExpenses = afterRepairValue * 0.06 + 4000 + 5000;
+
+        return saleExpenses;
+      };
+
+      const calculateProjectionLoanPayoff = form => {
+        const { projectionYear, loanPeriod, interestRate } = form;
+        const loan = calculateLoan(form);
+
+        // plus 1 to count the last month
+        var loanPayoff = getRemainingBalance(
+          loan,
+          projectionYear * 12 + 1,
+          loanPeriod * 12,
+          interestRate / 100
+        );
+
+        return loanPayoff;
+      };
+
+      const getRemainingBalance = (
+        originalBalance,
+        numOfPayments,
+        totalNumberOfPayments,
+        rate
+      ) => {
+        // https://www.mtgprofessor.com/formulas.htm
+        const monthlyRate = rate / 12; // monthly
+
+        const remainingBalance =
+          (originalBalance *
+            (Math.pow(1 + monthlyRate, totalNumberOfPayments) -
+              Math.pow(1 + monthlyRate, numOfPayments))) /
+          (Math.pow(1 + monthlyRate, totalNumberOfPayments) - 1);
+
+        return remainingBalance;
+      };
+
+      const calculateProjectionTotalInvestedCapital = form => {
+        const totalInvestedCapital = calculateOutOfPocket(form);
+
+        return totalInvestedCapital;
+      };
+
+      const calculateProjectionSaleProfit = form => {
+        const salePrice = calculateProjectionSalePrice(form);
+        const saleExpenses = calculateProjectionSaleExpenses(form);
+        const loanPayoff = calculateProjectionLoanPayoff(form);
+        const totalInvestedCapital = calculateOutOfPocket(form);
+
+        const saleProfit =
+          salePrice - saleExpenses - loanPayoff - totalInvestedCapital;
+
+        return saleProfit;
+      };
+
+      const calculateProjectionTotalCashflow = form => {
+        const projectionYear = form.projectionYear;
+        const cashflow = calculateMonthlyCashFlow(form);
+        const projectionTotalCashflow = cashflow * 12 * projectionYear;
+
+        return projectionTotalCashflow;
+      };
+
+      const calculateProjectionTotalProfit = form => {
+        const projectionTotalCashflow = calculateProjectionTotalCashflow(form);
+        const saleProfit = calculateProjectionSaleProfit(form);
+
+        const totalProfit = saleProfit + projectionTotalCashflow;
+
+        return totalProfit;
+      };
+      const calculateProjectionROI = form => {
+        const totalProfit = calculateProjectionTotalProfit(form);
+        const totalInvestedCapital = calculateOutOfPocket(form);
+        const year = form.projectionYear;
+
+        const projectedROI = (totalProfit / totalInvestedCapital / year) * 100;
+        return projectedROI;
+      };
+
       return {
         calculateTotalProjectCost: calculateTotalProjectCost,
         calculateOutOfPocket: calculateOutOfPocket,
         calculateValueByPercentage: calculateValueByPercentage,
         calculateLoan: calculateLoan,
         calculateMonthlyMortgagePayment: calculateMonthlyMortgagePayment,
-        calculateTotalExpenses: calculateTotalExpenses
+        calculateTotalExpenses: calculateTotalExpenses,
+        calculateMonthlyCashFlow: calculateMonthlyCashFlow,
+        calculateROIWithoutMortgage: calculateROIWithoutMortgage,
+        calculateROI: calculateROI,
+        calculateProjectionSalePrice: calculateProjectionSalePrice,
+        calculateProjectionSaleExpenses: calculateProjectionSaleExpenses,
+        calculateProjectionLoanPayoff: calculateProjectionLoanPayoff,
+        calculateProjectionTotalInvestedCapital: calculateProjectionTotalInvestedCapital,
+        calculateProjectionSaleProfit: calculateProjectionSaleProfit,
+        calculateProjectionTotalCashflow: calculateProjectionTotalCashflow,
+        calculateProjectionTotalProfit: calculateProjectionTotalProfit,
+        calculateProjectionROI: calculateProjectionROI
       };
     })();
 
@@ -477,6 +609,7 @@
       );
     };
 
+    // Total Cost Out of Pocket
     const Part2 = ({ form, handleOnChange, setFormValueByName } = props) => {
       const loan = Helpers.calculateLoan(form);
       const outOfPocket = Helpers.calculateOutOfPocket(form);
@@ -513,6 +646,7 @@
       );
     };
 
+    // Monthly Mortgage Payment
     const Part3 = ({ form, handleOnChange } = props) => {
       const loan = Helpers.calculateLoan(form);
       const outOfPocket = Helpers.calculateOutOfPocket(form);
@@ -544,6 +678,7 @@
       );
     };
 
+    // Total Income
     const Part4 = ({ form, handleOnChange } = props) => {
       return (
         <div>
@@ -692,6 +827,124 @@
       );
     };
 
+    // Evaluation
+    const Part6 = ({ form } = props) => {
+      return (
+        <div>
+          <h2>6) Evaluation</h2>
+          <SingleInput
+            label="Cashflow"
+            inputValue={Helpers.calculateMonthlyCashFlow(form).toCurrency()}
+            prefix="$"
+            disabled={true}
+          />
+          <SingleInput
+            label="ROI (without mortgage)"
+            inputValue={Helpers.calculateROIWithoutMortgage(form).toCurrency()}
+            suffix="%"
+            disabled={true}
+          />
+          <SingleInput
+            label="ROI"
+            inputValue={Helpers.calculateROI(form).toCurrency()}
+            suffix="%"
+            disabled={true}
+          />
+        </div>
+      );
+    };
+
+    const Part7 = ({ form, handleOnChange } = props) => {
+      return (
+        <div>
+          <h2>7) Projection</h2>
+
+          <SingleInput
+            label="Year"
+            inputValue={form.projectionYear}
+            inputName="projectionYear"
+            handleOnChange={handleOnChange}
+            suffix="yr."
+          />
+
+          <SingleInput
+            label="After Repair Value (ARV)"
+            inputValue={form.afterRepairValue}
+            inputName="afterRepairValue"
+            handleOnChange={handleOnChange}
+            prefix="$"
+          />
+
+          <SingleInput
+            label="Appreciation"
+            inputValue={form.appreciation}
+            inputName="appreciation"
+            handleOnChange={handleOnChange}
+            suffix="%"
+            roundValue={false}
+            additionalInfoText="(National Average: 4.4%)"
+          />
+
+          <SingleInput
+            label="Sale Price"
+            inputValue={Helpers.calculateProjectionSalePrice(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="Sale Expenses"
+            inputValue={Helpers.calculateProjectionSaleExpenses(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="Loan Payoff"
+            inputValue={Helpers.calculateProjectionLoanPayoff(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="Total Invested Capital"
+            inputValue={Helpers.calculateProjectionTotalInvestedCapital(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="Profit"
+            inputValue={Helpers.calculateProjectionSaleProfit(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="Total cashflow"
+            inputValue={Helpers.calculateProjectionTotalCashflow(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="Total Profit (with cashflow)"
+            inputValue={Helpers.calculateProjectionTotalProfit(form)}
+            prefix="$"
+            disabled={true}
+          />
+
+          <SingleInput
+            label="ROI"
+            inputValue={Helpers.calculateProjectionROI(form)}
+            prependValue=" "
+            suffix="%"
+            disabled={true}
+          />
+        </div>
+      );
+    };
+
     const Defaults = ({ defaults, handleOnSubmit } = props) => {
       const [localDefaults, setLocalDefaults] = React.useState({ ...defaults });
 
@@ -802,6 +1055,20 @@
                     handleOnChange={handleOnChange}
                     suffix={"%"}
                   />
+                  <SingleInput
+                    label="Projection Year"
+                    inputName="projectionYear"
+                    inputValue={localDefaults.projectionYear}
+                    handleOnChange={handleOnChange}
+                    suffix={"%"}
+                  />
+                  <SingleInput
+                    label="Appreciation"
+                    inputName="appreciation"
+                    inputValue={localDefaults.appreciation}
+                    handleOnChange={handleOnChange}
+                    suffix={"%"}
+                  />
                 </div>
               </form>
             </ReactBootstrap.Modal.Body>
@@ -816,36 +1083,62 @@
     };
 
     const Container = () => {
-      const [defaults, setDefaults] = useLocalStorage("defaults", "");
-      // const [defaults, setDefaults] = React.useState({});
-
-      const defaultsObject = defaults ? JSON.parse(defaults) : {};
-      const [form, setForm] = React.useState({
-        ...defaultsObject
-      });
-
-      React.useEffect(() => {}, [defaultsObject]);
+      const initialDefaults = {
+        purchaseClosingCosts: 5000,
+        loanPeriod: 30,
+        interestRate: 5,
+        downPaymentPercentage: 20,
+        vacancyRate: 5,
+        repairsRate: 5,
+        capitalExpendituresRate: 12.5,
+        insuranceRate: 0.5,
+        taxRate: 1.06,
+        propertyManagementRate: 11,
+        projectionYear: 5,
+        appreciation: 4.4
+      };
+      const [defaults, setDefaults] = useLocalStorage(
+        "defaults",
+        initialDefaults
+      );
+      const [savedForm, setSavedForm] = useLocalStorage(
+        "form",
+        initialDefaults
+      );
+      const [form, setForm] = React.useState(savedForm || initialDefaults);
 
       const handleOnChange = event => {
-        setForm({
+        const newForm = {
           ...form,
           [event.target.name]: Number(event.target.value)
-        });
+        };
+        setForm(newForm);
+
+        setSavedForm(newForm);
       };
 
       const setFormValueByName = (name, value) => {
-        setForm({
+        const newForm = {
           ...form,
           [name]: Number(value)
-        });
+        };
+        setForm(newForm);
+
+        setSavedForm(newForm);
       };
 
       const handleDefaultsSubmission = newDefaults => {
-        const newDefaultsString = JSON.stringify(newDefaults);
+        const newDefaultsString = newDefaults;
 
         setDefaults(newDefaultsString);
         const newForm = { ...form, ...newDefaults };
         setForm(newForm);
+        setSavedForm(newForm);
+      };
+
+      const handleResetNumbersButtonClick = () => {
+        setSavedForm(initialDefaults);
+        setForm(initialDefaults);
       };
 
       return (
@@ -853,10 +1146,19 @@
           <h1 className="text-center">RE Calculator</h1>
 
           <hr className="solid" />
+
           <Defaults
-            defaults={defaultsObject}
+            defaults={defaults}
             handleOnSubmit={handleDefaultsSubmission}
           />
+          <ReactBootstrap.Button
+            variant="primary"
+            onClick={handleResetNumbersButtonClick}
+            className="float-right"
+            style={{ "margin-right": "10px" }}
+          >
+            Reset Numbers
+          </ReactBootstrap.Button>
           <form>
             <Part0 form={form} handleOnChange={handleOnChange} />
             <Part1 form={form} handleOnChange={handleOnChange} />
@@ -868,6 +1170,8 @@
             <Part3 form={form} handleOnChange={handleOnChange} />
             <Part4 form={form} handleOnChange={handleOnChange} />
             <Part5 form={form} handleOnChange={handleOnChange} />
+            <Part6 form={form} />
+            <Part7 form={form} handleOnChange={handleOnChange} />
           </form>
         </div>
       );
