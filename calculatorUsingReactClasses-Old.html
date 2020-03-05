@@ -1,0 +1,1247 @@
+<html>
+  <head>
+    <title>RE Calculator</title>
+    <style>
+
+    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  </head>
+  <body>
+    <div id="root"> 
+    </div>
+  </body>
+</html>
+
+
+
+
+<div id="root">
+  <script src="https://unpkg.com/react@16.0.0-rc.3/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@16.0.0-rc.3/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/prop-types@15.6.0/index.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+  <script type="text/babel">
+
+    Number.prototype.toCurrency = function(){
+      console.log("this.valueOf: " + this.valueOf());
+
+      if (isNaN(this.valueOf()))
+      {
+        return 0;
+      }
+
+      const formattedValue =  this.valueOf().toLocaleString(undefined, {maximumFractionDigits:2});
+      console.log("formattedValue: " + formattedValue);
+
+      return formattedValue;
+    }
+    
+    class Calculator extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          // askingPrice: 0,
+          // assessedPrice: 0,
+          // purchasePrice: 200000,
+          purchaseClosingCosts: 2500,
+          downPaymentPercentage: 20,
+          downPayment: 0,
+          loanPeriod: 30,
+          interestRate: 5,
+          // rent: 2000,
+          vacancyRate: 5,
+          repairsRate: 5,
+          capitalExpendituresRate: 12.5,
+          insuranceRate: 0.5,
+          taxRate: 1.06,
+          propertyManagementRate: 11,
+          projectionYear: 5,
+          appreciation: 4.4 //
+        };
+        this.handleChange = this.handleChange.bind(this);
+        this.caculateDownPayment = this.caculateDownPayment.bind(this);
+        this.handleDownPaymentChange = this.handleDownPaymentChange.bind(this);
+        this.calculateTotalProjectCost = this.calculateTotalProjectCost.bind(
+          this
+        );
+        this.calculateLoan = this.calculateLoan.bind(this);
+        this.calculateOutOfPocket = this.calculateOutOfPocket.bind(this);
+
+        this.calculateMonthlyMortgagePayment = this.calculateMonthlyMortgagePayment.bind(
+          this
+        );
+        this.calculateTotalExpenses = this.calculateTotalExpenses.bind(this);
+        this.updateStateValue = this.updateStateValue.bind(this);
+        this.calculateValueByPercentage = this.calculateValueByPercentage.bind(
+          this
+        );
+        this.calculateMonthlyCashFlow = this.calculateMonthlyCashFlow.bind(
+          this
+        );
+        this.calculateROIWithoutMortgage = this.calculateROIWithoutMortgage.bind(
+          this
+        );
+        this.calculateROI = this.calculateROI.bind(this);
+        // this.functions = [
+        //   this.calculateProjectionSalePrice.bind(this),
+        //   this.calculateProjectionSaleExpenses.bind(this)
+        // ];
+        this.calculateProjectionSalePrice = this.calculateProjectionSalePrice.bind(
+          this
+        );
+        this.calculateProjectionSaleExpenses = this.calculateProjectionSaleExpenses.bind(
+          this
+        );
+        this.calculateProjectionLoanPayoff = this.calculateProjectionLoanPayoff.bind(
+          this
+        );
+        this.calculateProjectionTotalInvestedCapital = this.calculateProjectionTotalInvestedCapital.bind(
+          this
+        );
+        this.calculateProjectionSaleProfit = this.calculateProjectionSaleProfit.bind(
+          this
+        );
+        this.calculateProjectionTotalCashflow = this.calculateProjectionTotalCashflow.bind(
+          this
+        );
+        this.calculateProjectionTotalProfit = this.calculateProjectionTotalProfit.bind(
+          this
+        );
+        this.calculateProjectionROI = this.calculateProjectionROI.bind(this);
+        this.calculate50PercentRuleROI = this.calculate50PercentRuleROI.bind(
+          this
+        );
+        this.calculate50PercentRuleExpenses = this.calculate50PercentRuleExpenses.bind(
+          this
+        );
+        this.calculate50PercentRuleMortgage = this.calculate50PercentRuleMortgage.bind(
+          this
+        );
+        this.calculate50PercentRuleCashFlow = this.calculate50PercentRuleCashFlow.bind(
+          this
+        );
+      }
+
+      calculateProjectionSalePrice() {
+        // calculate compound interest
+        // A = P(1 + r/n)^(nt) where P = principal, r = rate, n = compound (1 if annualy) and t = time (in years)
+        var salePrice =
+          this.state.afterRepairValue *
+          Math.pow(
+            1 + this.state.appreciation / 100,
+            this.state.projectionYear
+          );
+
+        return salePrice;
+      }
+      calculateProjectionSaleExpenses() {
+        // 6% agent cost, $4000 closing costs, $5000 new paint cost
+        var saleExpenses = this.state.afterRepairValue * 0.06 + 4000 + 5000;
+
+        return saleExpenses;
+      }
+
+      handleChange(event) {
+        console.log(event.target.name);
+        console.log(event.target.value);
+        this.setState({ [event.target.name]: Number(event.target.value) }, () =>
+          console.log(this.state)
+        );
+      }
+
+      updateStateValue(stateValue, stateName) {
+        this.setState({ [stateName]: stateValue });
+      }
+
+      handleDownPaymentChange(e) {
+        const downPaymentPercentage =
+          (Number(e.target.value) / this.state.purchasePrice) * 100;
+
+        this.setState({ downPaymentPercentage: downPaymentPercentage });
+      }
+
+      caculateDownPayment() {
+        const downPayment =
+          (this.state.purchasePrice * this.state.downPaymentPercentage) / 100;
+
+        return downPayment;
+      }
+
+      calculateMonthlyMortgagePayment() {
+        var loan = this.calculateLoan();
+        const loanPeriod = this.state.loanPeriod;
+        const interestRate = this.state.interestRate;
+
+        // allow calculation for 0% interest rate
+        if (!interestRate){
+          return loan/(loanPeriod * 12);
+        }
+
+        // https://www.thebalance.com/calculate-mortgage-315668
+        // P = A/D where D = {[(1 + i) ^n] - 1} / [i(1 + i)^n]
+        var n = loanPeriod * 12; // 12 months
+        var i = interestRate / 100 / 12; // 12 months
+        var D = (Math.pow(1 + i, n) - 1) / (i * Math.pow(1 + i, n));
+        var monthlyMortgagePayment = loan / D;
+
+        return monthlyMortgagePayment;
+      }
+
+      calculateLoan() {
+        const purchasePrice = this.state.purchasePrice || 0;
+
+        const loan =
+          (purchasePrice *
+            (100 - this.state.downPaymentPercentage)) /
+          100;
+
+        return loan;
+      }
+
+      calculateTotalProjectCost() {
+        const totalProjectCost =
+          (this.state.purchasePrice || 0) +
+          (this.state.estimatedRepairs || 0) +
+          (this.state.purchaseClosingCosts || 0) +
+          (this.state.preRentHoldingCosts || 0);
+
+        return totalProjectCost;
+      }
+
+      calculateOutOfPocket() {
+        const totalProjectCost = this.calculateTotalProjectCost();
+        const loan = this.calculateLoan(this.state.downPaymentPercentage);
+        var outOfPocket = totalProjectCost - loan;
+
+        return outOfPocket;
+      }
+
+      calculateTotalExpenses() {
+        const mortgage = this.calculateMonthlyMortgagePayment();
+        const vacancyCost = this.calculateValueByPercentage(
+          this.state.rent,
+          this.state.vacancyRate
+        );
+        const repairsCost = this.calculateValueByPercentage(
+          this.state.rent,
+          this.state.repairsRate
+        );
+        const capitalExpendituresCost = this.calculateValueByPercentage(
+          this.state.rent,
+          this.state.capitalExpendituresRate
+        );
+        const insuranceCost = this.calculateValueByPercentage(
+          this.state.purchasePrice / 12,
+          this.state.insuranceRate
+        );
+        const taxCost = this.calculateValueByPercentage(
+          this.state.purchasePrice / 12,
+          this.state.taxRate
+        );
+        const propertyManagementMonthlyCost = this.calculateValueByPercentage(
+          this.state.rent,
+          this.state.propertyManagementRate
+        );
+
+        const totalExpenses =
+          mortgage +
+          vacancyCost +
+          repairsCost +
+          capitalExpendituresCost +
+          insuranceCost +
+          taxCost +
+          (this.state.floodInsuranceMonthlyCost || 0) +
+          (this.state.electricityMonthlyCost || 0) +
+          (this.state.waterMonthlyCost || 0) +
+          (this.state.sewerMonthlyCost || 0) +
+          (this.state.gasMonthlyCost || 0) +
+          (this.state.garbageMonthlyCost || 0) +
+          (this.state.hoaMonthlyCost || 0) +
+          propertyManagementMonthlyCost;
+
+        return totalExpenses;
+      }
+
+      calculateValueByPercentage(totalValue, percentage) {
+        const percentageValue = (percentage / 100) * totalValue;
+
+        return percentageValue;
+      }
+
+      calculateMonthlyCashFlow() {
+        const cashflow = this.state.rent - this.calculateTotalExpenses();
+
+        return cashflow;
+      }
+
+      calculateROI() {
+        const cashflow = this.calculateMonthlyCashFlow();
+        var ROI = ((cashflow * 12) / this.calculateOutOfPocket()) * 100;
+
+        return ROI;
+      }
+
+      calculateROIWithoutMortgage() {
+        var totalExpensesWithoutMortgage =
+          this.calculateTotalExpenses() -
+          this.calculateMonthlyMortgagePayment();
+
+        var ROIWithoutMortgage =
+          (((this.state.rent - totalExpensesWithoutMortgage) * 12) /
+            this.calculateOutOfPocket()) *
+          100;
+
+        return ROIWithoutMortgage;
+      }
+
+      calculateProjectionLoanPayoff() {
+        const loan = this.calculateLoan();
+        const year = this.state.projectionYear;
+        const loanPeriod = this.state.loanPeriod;
+        const interestRate = this.state.interestRate;
+
+        // console.log(this.state);
+        // console.log("loan: " + loan);
+
+        // plus 1 to count the last month
+        var loanPayoff = this.getRemainingBalance(
+          loan,
+          year * 12 + 1,
+          loanPeriod * 12,
+          interestRate / 100
+        );
+
+        return loanPayoff;
+      }
+      calculateProjectionTotalInvestedCapital() {
+        const totalInvestedCapital = this.calculateOutOfPocket();
+
+        return totalInvestedCapital;
+      }
+
+      calculateProjectionTotalCashflow() {
+        const projectionYear = this.state.projectionYear;
+        const cashflow = this.calculateMonthlyCashFlow();
+        const projectionTotalCashflow = cashflow * 12 * projectionYear;
+
+        return projectionTotalCashflow;
+      }
+      calculateProjectionTotalProfit() {
+        const projectionTotalCashflow = this.calculateProjectionTotalCashflow();
+        const saleProfit = this.calculateProjectionSaleProfit();
+
+        const totalProfit = saleProfit + projectionTotalCashflow;
+
+        return totalProfit;
+      }
+      calculateProjectionROI() {
+        const totalProfit = this.calculateProjectionTotalProfit();
+        const totalInvestedCapital = this.calculateOutOfPocket();
+        const year = this.state.projectionYear;
+
+        const projectedROI = (totalProfit / totalInvestedCapital / year) * 100;
+
+        return projectedROI;
+      }
+
+      calculateProjectionSaleProfit() {
+        const salePrice = this.calculateProjectionSalePrice();
+        const saleExpenses = this.calculateProjectionSaleExpenses();
+        const loanPayoff = this.calculateProjectionLoanPayoff();
+        const totalInvestedCapital = this.calculateOutOfPocket();
+
+        const saleProfit =
+          salePrice - saleExpenses - loanPayoff - totalInvestedCapital;
+
+        return saleProfit;
+      }
+
+      getRemainingBalance(
+        originalBalance,
+        numOfPayments,
+        totalNumberOfPayments,
+        rate
+      ) {
+        // https://www.mtgprofessor.com/formulas.htm
+        const monthlyRate = rate / 12; // monthly
+
+        const remainingBalance =
+          (originalBalance *
+            (Math.pow(1 + monthlyRate, totalNumberOfPayments) -
+              Math.pow(1 + monthlyRate, numOfPayments))) /
+          (Math.pow(1 + monthlyRate, totalNumberOfPayments) - 1);
+
+        return remainingBalance;
+      }
+
+      calculate50PercentRuleROI() {
+        const cashFlow = this.calculate50PercentRuleCashFlow();
+        const outOfPocket = this.calculateOutOfPocket();
+
+        var ROI = ((cashFlow * 12) / outOfPocket) * 100;
+        return ROI;
+      }
+      calculate50PercentRuleExpenses() {
+        const rent = this.state.rent;
+        const expenses = rent / 2;
+        return expenses;
+      }
+      calculate50PercentRuleMortgage() {
+        return this.calculateMonthlyMortgagePayment();
+      }
+
+      calculate50PercentRuleCashFlow() {
+        const expenses = this.calculate50PercentRuleExpenses();
+        const rent = this.state.rent;
+        const monthlyMortgagePayment = this.calculateMonthlyMortgagePayment();
+        var cashFlow = rent - expenses - monthlyMortgagePayment;
+        return cashFlow;
+      }
+
+      /* ------------------------------------------------------------------------------------------------------ */
+
+      render() {
+        return (
+          <div class="container">
+            <h1 class="text-center">RE Calculator</h1>
+
+            <form>
+              <Part0 
+                askingPrice={this.state.askingPrice} 
+                handleChange={e => this.handleChange(e)}
+              />
+
+              <br/>
+
+              <Part1
+                purchasePrice={this.state.purchasePrice}
+                estimatedRepairs={this.state.estimatedRepairs}
+                purchaseClosingCosts={this.state.purchaseClosingCosts}
+                preRentHoldingCosts={this.state.preRentHoldingCosts}
+                calculateTotalProjectCost={this.calculateTotalProjectCost}
+                handleChange={e => this.handleChange(e)}
+
+              />
+              
+              <br/>
+
+              <Part2
+                state={this.state}
+                downPaymentPercentage={this.state.downPaymentPercentage}
+                downPayment={this.state.downPayment}
+                handleChange={e => this.handleChange(e)}
+                caculateDownPayment={this.caculateDownPayment}
+                calculateLoan={this.calculateLoan}
+                calculateOutOfPocket={this.calculateOutOfPocket}
+                handleDownPaymentChange={e => this.handleDownPaymentChange(e)}
+                updateStateValue={this.updateStateValue}
+                calculateValueByPercentage={this.calculateValueByPercentage}
+              />
+
+              <br/>
+
+              <Part3
+                loanPeriod={this.state.loanPeriod}
+                interestRate={this.state.interestRate}
+                handleChange={e => this.handleChange(e)}
+                calculateMonthlyMortgagePayment={
+                  this.calculateMonthlyMortgagePayment
+                }
+              />
+              
+              <br/>
+
+              <Part4
+                rent={this.state.rent}
+                handleChange={e => this.handleChange(e)}
+              />
+
+              <br/>
+
+              <Part5
+                calculateMonthlyMortgagePayment={
+                  this.calculateMonthlyMortgagePayment
+                }
+                calculateTotalExpenses={this.calculateTotalExpenses}
+                handleChange={e => this.handleChange(e)}
+                updateStateValue={this.updateStateValue}
+                state={this.state}
+                calculateValueByPercentage={this.calculateValueByPercentage}
+              />
+
+              <br/>
+
+              <Part6
+                state={this.state.state}
+                handleChange={e => this.handleChange(e)}
+                calculateMonthlyCashFlow={this.calculateMonthlyCashFlow}
+                calculateROIWithoutMortgage={this.calculateROIWithoutMortgage}
+                calculateROI={this.calculateROI}
+              />
+
+              <br/>
+              
+              <Part7
+                state={this.state}
+                handleChange={e => this.handleChange(e)}
+                functions={this.functions}
+                calculateProjectionSalePrice={this.calculateProjectionSalePrice}
+                calculateProjectionSaleExpenses={
+                  this.calculateProjectionSaleExpenses
+                }
+                calculateProjectionLoanPayoff={this.calculateProjectionLoanPayoff}
+                calculateProjectionTotalInvestedCapital={
+                  this.calculateProjectionTotalInvestedCapital
+                }
+                calculateProjectionSaleProfit={this.calculateProjectionSaleProfit}
+                calculateProjectionTotalCashflow={
+                  this.calculateProjectionTotalCashflow
+                }
+                calculateProjectionTotalProfit={
+                  this.calculateProjectionTotalProfit
+                }
+                calculateProjectionROI={this.calculateProjectionROI}
+              />
+          </form>
+          </div>
+        );
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------ */
+
+    class Part0 extends React.Component {
+      render() {
+        const { askingPrice, handleChange } = this.props;
+        return (
+          <div>
+            <SingleInput
+              inputDisplayName="Asking Price"
+              inputValue={askingPrice}
+              inputName="askingPrice"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+          </div>
+         
+          
+        );
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------ */
+
+    // Total Project Cost
+    class Part1 extends React.Component {
+      render() {
+        const {
+          purchasePrice,
+          handleChange,
+          estimatedRepairs,
+          purchaseClosingCosts,
+          preRentHoldingCosts,
+          calculateTotalProjectCost
+        } = this.props;
+
+        const totalProjectCost = calculateTotalProjectCost();
+
+        return (
+          <div>
+            <h2>1) Total Project Cost: ${totalProjectCost.toCurrency()}</h2>
+            <SingleInput
+              inputDisplayName="Purchase Price"
+              inputValue={purchasePrice}
+              inputName="purchasePrice"
+              handleChange={handleChange}
+              appendValue=" "
+              required="true"
+            />
+
+            <SingleInput
+              inputDisplayName="Purchase Closing Costs"
+              inputValue={purchaseClosingCosts}
+              inputName="purchaseClosingCosts"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Pre-Rent Holding Costs"
+              inputValue={preRentHoldingCosts}
+              inputName="preRentHoldingCosts"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Estimated Repairs"
+              inputValue={estimatedRepairs}
+              inputName="estimatedRepairs"
+              handleChange={handleChange}
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Total Project Cost"
+              inputValue={totalProjectCost}
+              appendValue=" "
+              disabled={true}
+            />
+
+          </div>
+        );
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------ */
+
+    // Total Cost Out of Pocket
+    class Part2 extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+
+      render() {
+        const {
+          downPaymentPercentage,
+          handleChange,
+          caculateDownPayment,
+          handleDownPaymentChange,
+          calculateLoan,
+          calculateOutOfPocket,
+          updateStateValue,
+          calculateValueByPercentage,
+          state
+        } = this.props;
+
+        const downPayment = caculateDownPayment();
+        const loan = calculateLoan();
+        const outOfPocket = calculateOutOfPocket();
+        return (
+          <div>
+            <h2>2) Total Cost Out of Pocket: ${calculateOutOfPocket().toCurrency()}</h2>
+
+
+            <MonthYearPercentInput
+              inputDisplayName="Down Payment"
+              inputName="downPaymentPercentage"
+              percentageValue={state.downPaymentPercentage}
+              wholeMonthlyValue={state.purchasePrice}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+              monthAppendValue=" "
+              disableYear={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Loan"
+              inputValue={loan}
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Out of Pocket"
+              inputValue={outOfPocket}
+              appendValue=" "
+              disabled={true}
+            />
+          </div>
+        );
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------ */
+
+    // Monthly Mortgage Payment
+    class Part3 extends React.Component {
+      render() {
+        const {
+          loanPeriod,
+          interestRate,
+          handleChange,
+          calculateMonthlyMortgagePayment
+        } = this.props;
+
+        var monthlyMortgagePayment = calculateMonthlyMortgagePayment(
+          loanPeriod,
+          interestRate
+        );
+
+        return (
+          <div>
+            <h2>
+              3) Monthly Mortgage Payment: ${monthlyMortgagePayment.toCurrency()}
+              /mo.
+            </h2>
+            <SingleInput
+              inputDisplayName="Loan Period"
+              inputValue={loanPeriod}
+              inputName="loanPeriod"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="years"
+            />
+       
+            <SingleInput
+              inputDisplayName="Interest Rate"
+              inputValue={interestRate}
+              inputName="interestRate"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="%"
+            />
+          </div>
+        );
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------ */
+
+    // Total Income
+    class Part4 extends React.Component {
+      render() {
+        const { rent, handleChange } = this.props;
+
+        return (
+          <div>
+            <h2>4) Total Income: $ {Number(rent).toCurrency()}/mo.</h2>
+            <SingleInput
+              inputDisplayName="Rent"
+              inputValue={rent}
+              inputName="rent"
+              handleChange={handleChange}
+              required
+            />
+          </div>
+        );
+      }
+    }
+
+    /* ------------------------------------------------------------------------------------------------------ */
+
+    // Total Expenses
+    class Part5 extends React.Component {
+      render() {
+        const {
+          state,
+          calculateTotalExpenses,
+          calculateMonthlyMortgagePayment,
+          calculateValueByPercentage,
+          handleChange,
+          updateStateValue
+        } = this.props;
+
+        const mortgage = calculateMonthlyMortgagePayment().toCurrency();
+
+        return (
+          <div>
+            <h2>
+              5) Total Expenses: $ {calculateTotalExpenses().toCurrency()}/mo.
+            </h2>
+            <SingleInput
+              inputDisplayName="Mortgage"
+              inputValue={mortgage}
+              disabled={true}
+            />
+
+            <MonthYearPercentInput
+              inputDisplayName="Vacancy"
+              inputName="vacancyRate"
+              percentageValue={state.vacancyRate}
+              wholeMonthlyValue={state.rent}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+            />
+            <MonthYearPercentInput
+              inputDisplayName="Repairs"
+              inputName="repairsRate"
+              percentageValue={state.repairsRate}
+              wholeMonthlyValue={state.rent}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+            />
+            <MonthYearPercentInput
+              inputDisplayName="Capital Expenditures"
+              inputName="capitalExpendituresRate"
+              percentageValue={state.capitalExpendituresRate}
+              wholeMonthlyValue={state.rent}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+            />
+            <MonthYearPercentInput
+              inputDisplayName="Insurance"
+              inputName="insuranceRate"
+              percentageValue={state.insuranceRate}
+              wholeMonthlyValue={state.purchasePrice / 12}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+            />
+            <MonthYearPercentInput
+              inputDisplayName="Taxes"
+              inputName="taxRate"
+              additionalInfoText=" (Hillsborough: 1.06%)"
+              percentageValue={state.taxRate}
+              wholeMonthlyValue={state.purchasePrice / 12}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+            />
+            <MonthYearInput
+              inputDisplayName="Flood Insurance"
+              inputName="floodInsuranceMonthlyCost"
+              inputValue={state.floodInsuranceMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearInput
+              inputDisplayName="Electricity"
+              inputName="electricityMonthlyCost"
+              inputValue={state.electricityMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearInput
+              inputDisplayName="Water"
+              inputName="waterMonthlyCost"
+              inputValue={state.waterMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearInput
+              inputDisplayName="Sewer"
+              inputName="sewerMonthlyCost"
+              inputValue={state.sewerMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearInput
+              inputDisplayName="Gas"
+              inputName="gasMonthlyCost"
+              inputValue={state.gasMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearInput
+              inputDisplayName="Garbage"
+              inputName="garbageMonthlyCost"
+              inputValue={state.garbageMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearInput
+              inputDisplayName="HOA"
+              inputName="hoaMonthlyCost"
+              inputValue={state.hoaMonthlyCost}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+            />
+            <MonthYearPercentInput
+              inputDisplayName="Property Management"
+              inputName="propertyManagementRate"
+              percentageValue={state.propertyManagementRate}
+              wholeMonthlyValue={state.rent}
+              handleChange={handleChange}
+              updateStateValue={updateStateValue}
+              calculateValueByPercentage={calculateValueByPercentage}
+            />
+
+            <SingleInput
+              inputDisplayName="Total Expenses"
+              inputValue={calculateTotalExpenses()}
+              disabled={true}
+            />
+          </div>
+        );
+      }
+    }
+
+    class MonthYearPercentInput extends React.Component {
+      render() {
+        const {
+          inputDisplayName,
+          inputName,
+          additionalInfoText,
+          percentageValue,
+          wholeMonthlyValue,
+          handleChange,
+          updateStateValue,
+          calculateValueByPercentage,
+          disableYear,
+          monthAppendValue
+        } = this.props;
+
+        const monthlyValue = calculateValueByPercentage(
+          wholeMonthlyValue,
+          percentageValue
+        );
+
+        let yearInput;
+        if(!disableYear){
+          yearInput = <div  class="col-md-3">
+              <div class="input-group">
+                <input className="form-control"
+                  type="number"
+                  value={Math.ceil(monthlyValue * 12)}
+                  onChange={e =>
+                    updateStateValue(
+                      (Number(e.target.value) / 12 / wholeMonthlyValue) * 100,
+                      inputName
+                    )
+                  }
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">/yr.</span>
+                </div>
+              </div>
+            </div>
+        }
+
+        return (
+          <div  class="input-group row py-1">
+            <label  class="col-md-2">{inputDisplayName}</label>
+            <div class="col-md-4">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">$</span>
+                </div>
+                <input className="form-control"
+                  type="number"
+                  value={Math.ceil(monthlyValue)}
+                  onChange={e =>
+                    updateStateValue(
+                      (Number(e.target.value) / wholeMonthlyValue) * 100,
+                      inputName
+                    )
+                  }
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">{monthAppendValue || "/mo."}</span>
+                </div>
+              </div>
+            </div>
+
+            {yearInput}
+
+            <div  class="col-md-3">
+              <div class="input-group">
+                <input className="form-control"
+                  type="number"
+                  value={percentageValue}
+                  name={inputName}
+                  onChange={handleChange}
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">%</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <span class="mx-auto">{additionalInfoText}</span>
+            </div>        
+        </div>
+        );
+      }
+    }
+
+    class SingleInput extends React.Component {
+      render() {
+        const {
+          inputDisplayName,
+          inputName,
+          inputValue,
+          additionalInfoText,
+          handleChange,
+          disabled,
+          prependValue,
+          appendValue,
+          required,
+          roundValue=true
+        } = this.props;
+
+        let isInvalid = "";
+        if (required && !inputValue){
+          isInvalid = "is-invalid"
+        }
+
+        const value = (roundValue ? Math.ceil(inputValue) : inputValue);
+
+        return (
+          <div class="input-group row py-1 ">
+            <label  class="col-md-2">{inputDisplayName}</label>
+            <div class="col-md-4">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">{prependValue || "$"}</span>
+                </div>
+                <input class={"form-control " + isInvalid}
+                  type="number"
+                  name={inputName}
+                  value={value}
+                  onChange={handleChange}
+                  disabled={disabled ? "disabled" : ""}
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">{appendValue || "/mo."}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2">{additionalInfoText}</div>
+          </div>
+        );
+      }
+    }
+
+    class MonthYearInput extends React.Component {
+      render() {
+        const {
+          inputDisplayName,
+          inputName,
+          inputValue,
+          handleChange,
+          updateStateValue
+        } = this.props;
+
+        return (
+          <div class="input-group row py-1 ">
+            <label  class="col-md-2">{inputDisplayName}</label>
+            <div class="col-md-4">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">$</span>
+                </div>
+                <input className="form-control"
+                  type="number"
+                  name={inputName}
+                  value={Math.ceil(inputValue)}
+                  onChange={handleChange}
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">/mo.</span>
+                </div>
+              </div>
+            </div>
+            <div  class="col-md-3">
+              <div class="input-group">
+                  <input class="form-control"
+                  type="number"
+                  value={inputValue * 12}
+                  onChange={e =>
+                    updateStateValue(Number(e.target.value) / 12, inputName)
+                  }
+                />
+                <div class="input-group-append">
+                  <span class="input-group-text">/yr.</span>
+                </div>
+              </div>
+            </div>
+         
+          </div>
+        );
+      }
+    }
+
+    // Evaluation
+    class Part6 extends React.Component {
+      render() {
+        const {
+          calculateMonthlyCashFlow,
+          calculateROIWithoutMortgage,
+          calculateROI
+        } = this.props;
+
+        return (
+          <div>
+            <h2>6) Evaluation</h2>
+            <SingleInput
+              inputDisplayName="Cashflow"
+              inputValue={calculateMonthlyCashFlow().toFixed(2)}
+              appendValue=" "
+              disabled={true}
+            />
+            <SingleInput
+              inputDisplayName="ROI (without mortgage)"
+              inputValue={calculateROIWithoutMortgage().toFixed(2)}
+              prependValue=" "
+              appendValue="%"
+              disabled={true}
+            />
+            <SingleInput
+              inputDisplayName="ROI"
+              inputValue={calculateROI().toFixed(2)}
+              prependValue=" "
+              appendValue="%"
+              disabled={true}
+            />
+          </div>
+        );
+      }
+    }
+
+    // Projection
+    class Part7 extends React.Component {
+      render() {
+        const {
+          state,
+          functions,
+          handleChange,
+          calculateProjectionSalePrice,
+          calculateProjectionSaleExpenses,
+          calculateProjectionLoanPayoff,
+          calculateProjectionTotalInvestedCapital,
+          calculateProjectionSaleProfit,
+          calculateProjectionTotalCashflow,
+          calculateProjectionTotalProfit,
+          calculateProjectionROI
+        } = this.props;
+        // console.log(functions);
+        return (
+          <div>
+            <h2>7) Projection</h2>
+          
+            <SingleInput
+              inputDisplayName="Year"
+              inputValue={state.projectionYear}
+              inputName="projectionYear"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="yr."
+            />
+
+
+            <SingleInput
+              inputDisplayName="After Repair Value (ARV)"
+              inputValue={state.afterRepairValue}
+              inputName="afterRepairValue"
+              handleChange={handleChange}
+              prependValue="$"
+              appendValue=" "
+            />
+
+            <SingleInput
+              inputDisplayName="Appreciation"
+              inputValue={state.appreciation}
+              inputName="appreciation"
+              handleChange={handleChange}
+              prependValue=" "
+              appendValue="%"
+              roundValue={false}
+              additionalInfoText="(National Average: 4.4%)"
+            />
+            
+            <SingleInput
+              inputDisplayName="Sale Price"
+              inputValue={calculateProjectionSalePrice()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+           
+            <SingleInput
+              inputDisplayName="Sale Expenses"
+              inputValue={calculateProjectionSaleExpenses()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Loan Payoff"
+              inputValue={calculateProjectionLoanPayoff()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Total Invested Capital"
+              inputValue={calculateProjectionTotalInvestedCapital()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Profit"
+              inputValue={calculateProjectionSaleProfit()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Total cashflow"
+              inputValue={calculateProjectionTotalCashflow()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="Total Profit (with cashflow)"
+              inputValue={calculateProjectionTotalProfit()}
+              prependValue="$"
+              appendValue=" "
+              disabled={true}
+            />
+
+            <SingleInput
+              inputDisplayName="ROI"
+              inputValue={calculateProjectionROI()}
+              prependValue=" "
+              appendValue="%"
+              disabled={true}
+            />
+          </div>
+        );
+      }
+    }
+
+    // Evaluation
+    // class FiftyPercentRule extends React.Component {
+    //   render() {
+    //     const {
+    //       state,
+    //       calculate50PercentRuleROI,
+    //       calculate50PercentRuleExpenses,
+    //       calculate50PercentRuleMortgage,
+    //       calculate50PercentRuleCashFlow
+    //     } = this.props;
+
+    //     return (
+    //       <div>
+    //         <h2>50% Rule: {calculate50PercentRuleROI().toCurrency()}% ROI</h2>
+    //         <SingleInput
+    //           inputDisplayName="Expenses"
+    //           inputValue={calculate50PercentRuleExpenses()}
+    //           disabled={true}
+    //         />
+    //         <SingleInput
+    //           inputDisplayName="Mortgage"
+    //           inputValue={calculate50PercentRuleMortgage()}
+    //           disabled={true}
+    //         />
+    //         <SingleInput
+    //           inputDisplayName="Cash flow"
+    //           inputValue={calculate50PercentRuleCashFlow()}
+    //           disabled={true}
+    //         />
+    //       </div>
+    //     );
+    //   }
+    // }
+
+    const rootElement = document.getElementById("root");
+    const element = <Calculator />;
+
+    ReactDOM.render(element, rootElement);
+  </script>
+</div>
