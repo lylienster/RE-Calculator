@@ -368,7 +368,8 @@
       prefix,
       suffix,
       required,
-      roundValue = true
+      roundValue = true,
+      isNumberInput
     } = props) => {
       let isInvalid = "";
       if (required && !inputValue) {
@@ -377,7 +378,7 @@
 
       let value = roundValue ? Math.ceil(inputValue) : inputValue;
 
-      value = value ? value.toCurrency() : "";
+      value = value && !isNaN(value) ? Number(value).toCurrency() : "";
 
       return (
         <div className="input-group row py-1 ">
@@ -393,6 +394,7 @@
                 value={value}
                 onChange={handleOnChange}
                 disabled={disabled ? "disabled" : ""}
+                type={isNumberInput ? "number" : ""}
               />
               <div className="input-group-append">
                 <span className="input-group-text">{suffix}</span>
@@ -681,6 +683,8 @@
             inputName="interestRate"
             handleOnChange={handleOnChange}
             suffix="%"
+            roundValue={false}
+            isNumberInput
           />
         </div>
       );
@@ -899,6 +903,7 @@
             suffix="%"
             roundValue={false}
             additionalInfoText="(National Average: 4.4%)"
+            isNumberInput={true}
           />
 
           <SingleInput
@@ -965,10 +970,13 @@
       const [localDefaults, setLocalDefaults] = React.useState({ ...defaults });
 
       const handleOnChange = event => {
-        setLocalDefaults({
-          ...localDefaults,
-          [event.target.name]: Number(event.target.value.replace(/\D/g, ""))
-        });
+        const trimmedValue = event.target.value.replace(/,/g, "");
+        if (!isNaN(trimmedValue)) {
+          setLocalDefaults({
+            ...localDefaults,
+            [event.target.name]: Number(trimmedValue)
+          });
+        }
       };
 
       const [showModal, setShowModal] = React.useState(false);
@@ -1011,6 +1019,8 @@
                     inputValue={localDefaults.loanPeriod}
                     handleOnChange={handleOnChange}
                     suffix={"years"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Interest Rate"
@@ -1018,6 +1028,8 @@
                     inputValue={localDefaults.interestRate}
                     handleOnChange={handleOnChange}
                     suffix={"%"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Down Payment Percentage"
@@ -1025,6 +1037,8 @@
                     inputValue={localDefaults.downPaymentPercentage}
                     handleOnChange={handleOnChange}
                     suffix={"%"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Vacancy Rate"
@@ -1032,6 +1046,8 @@
                     inputValue={localDefaults.vacancyRate}
                     handleOnChange={handleOnChange}
                     suffix={"%"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Repair Percentage"
@@ -1039,6 +1055,8 @@
                     inputValue={localDefaults.repairsRate}
                     handleOnChange={handleOnChange}
                     suffix={"%"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Capital Expenditure Percentage"
@@ -1047,6 +1065,7 @@
                     handleOnChange={handleOnChange}
                     suffix={"%"}
                     roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Insurance Rate"
@@ -1055,6 +1074,7 @@
                     handleOnChange={handleOnChange}
                     suffix={"%"}
                     roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Tax Rate"
@@ -1063,6 +1083,7 @@
                     handleOnChange={handleOnChange}
                     suffix={"%"}
                     roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Property Management Rate"
@@ -1070,13 +1091,17 @@
                     inputValue={localDefaults.propertyManagementRate}
                     handleOnChange={handleOnChange}
                     suffix={"%"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Projection Year"
                     inputName="projectionYear"
                     inputValue={localDefaults.projectionYear}
                     handleOnChange={handleOnChange}
-                    suffix={"%"}
+                    suffix={"years"}
+                    roundValue={false}
+                    isNumberInput
                   />
                   <SingleInput
                     label="Appreciation"
@@ -1084,6 +1109,8 @@
                     inputValue={localDefaults.appreciation}
                     handleOnChange={handleOnChange}
                     suffix={"%"}
+                    roundValue={false}
+                    isNumberInput
                   />
                 </div>
               </form>
@@ -1124,17 +1151,19 @@
       const [form, setForm] = React.useState(savedForm || initialDefaults);
 
       const handleOnChange = event => {
-        const newForm = {
-          ...form,
-          [event.target.name]: Number(event.target.value.replace(/\D/g, ""))
-        };
-        setForm(newForm);
+        const trimmedValue = event.target.value.replace(/,/g, "");
+        if (!isNaN(trimmedValue)) {
+          const newForm = {
+            ...form,
+            [event.target.name]: Number(trimmedValue)
+          };
+          setForm(newForm);
 
-        setSavedForm(newForm);
+          setSavedForm(newForm);
+        }
       };
 
       const setFormValueByName = (name, value) => {
-        debugger;
         const newForm = {
           ...form,
           [name]: Number(value)
