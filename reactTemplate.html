@@ -363,6 +363,16 @@
       return formattedValue;
     };
 
+    // Object.prototype.toCurrency = function() {
+    //   if (isNaN(this.valueOf())) {
+    //     return "";
+    //   }
+
+    //   const formattedValue = Number(this.valueOf()).toCurrency();
+
+    //   return formattedValue;
+    // };
+
     // end of Helper Functions
 
     const SingleInput = ({
@@ -382,7 +392,9 @@
         isInvalid = "is-invalid";
       }
 
-      const value = roundValue ? Math.ceil(inputValue) : inputValue;
+      let value = roundValue ? Math.ceil(inputValue) : inputValue;
+
+      value = value ? value.toCurrency() : "";
 
       return (
         <div className="input-group row py-1 ">
@@ -394,9 +406,8 @@
               </div>
               <input
                 className={"form-control " + isInvalid}
-                type="number"
                 name={inputName}
-                value={value || ""}
+                value={value}
                 onChange={handleOnChange}
                 disabled={disabled ? "disabled" : ""}
               />
@@ -417,6 +428,11 @@
       handleOnChange,
       setFormValueByName
     } = props) => {
+      const handleYearInputOnChange = event => {
+        const value = Number(event.target.value.replace(/\D/g, "")) / 12;
+        setFormValueByName(inputName, value);
+      };
+
       return (
         <div className="input-group row py-1 ">
           <label className="col-md-2">{label}</label>
@@ -427,9 +443,8 @@
               </div>
               <input
                 className="form-control"
-                type="number"
                 name={inputName}
-                value={Math.ceil(inputValue) || ""}
+                value={inputValue ? Math.ceil(inputValue).toCurrency() : ""}
                 onChange={handleOnChange}
               />
               <div className="input-group-append">
@@ -441,11 +456,8 @@
             <div className="input-group">
               <input
                 className="form-control"
-                type="number"
-                value={inputValue * 12 || ""}
-                onChange={e =>
-                  setFormValueByName(Number(e.target.value) / 12, inputName)
-                }
+                value={inputValue ? (inputValue * 12).toCurrency() : ""}
+                onChange={handleYearInputOnChange}
               />
               <div className="input-group-append">
                 <span className="input-group-text">/yr.</span>
@@ -472,23 +484,42 @@
         percentageValue
       );
 
+      const handleYearInputOnChange = event => {
+        const value =
+          (Number(event.target.value.replace(/\D/g, "")) /
+            12 /
+            wholeMonthlyValue) *
+          100;
+        setFormValueByName(inputName, value);
+      };
+
+      const handleMonthInputOnChange = event => {
+        const value =
+          (Number(event.target.value.replace(/\D/g, "")) / wholeMonthlyValue) *
+          100;
+        setFormValueByName(inputName, value);
+      };
+
+      const monthValue = monthlyValue
+        ? Math.ceil(monthlyValue).toCurrency()
+        : "";
+
+      const value = Math.round(percentageValue * 100) / 100;
       const getYearInput = () => {
         if (disableYear) {
           return null;
         }
+
+        const yearValue = monthlyValue
+          ? Math.ceil(monthlyValue * 12).toCurrency()
+          : "";
         return (
           <div className="col-md-3">
             <div className="input-group">
               <input
                 className="form-control"
-                type="number"
-                value={Math.ceil(monthlyValue * 12) || ""}
-                onChange={e =>
-                  setFormValueByName(
-                    inputName,
-                    (Number(e.target.value) / 12 / wholeMonthlyValue) * 100
-                  )
-                }
+                value={yearValue}
+                onChange={handleYearInputOnChange}
               />
               <div className="input-group-append">
                 <span className="input-group-text">/yr.</span>
@@ -508,14 +539,8 @@
               </div>
               <input
                 className="form-control"
-                type="number"
-                value={Math.ceil(monthlyValue) || ""}
-                onChange={e =>
-                  setFormValueByName(
-                    inputName,
-                    (Number(e.target.value) / wholeMonthlyValue) * 100
-                  )
-                }
+                value={monthValue}
+                onChange={handleMonthInputOnChange}
               />
               <div className="input-group-append">
                 <span className="input-group-text">{monthAppendValue}</span>
@@ -529,7 +554,7 @@
               <input
                 className="form-control"
                 type="number"
-                value={percentageValue}
+                value={value}
                 name={inputName}
                 onChange={handleOnChange}
               />
@@ -573,7 +598,7 @@
             inputName="purchasePrice"
             handleOnChange={handleOnChange}
             prefix={"$"}
-            required="true"
+            required={true}
           />
           <SingleInput
             label="Purchase Closing Costs"
@@ -709,7 +734,13 @@
             5) Total Expenses: ${" "}
             {Helpers.calculateTotalExpenses(form).toCurrency()}/mo.
           </h2>
-          <SingleInput label="Mortgage" inputValue={mortgage} disabled={true} />
+          <SingleInput
+            label="Mortgage"
+            inputValue={mortgage}
+            disabled={true}
+            prefix="$"
+            suffix="/mo."
+          />
 
           <MonthYearPercentInput
             label="Vacancy"
@@ -836,6 +867,7 @@
             label="Cashflow"
             inputValue={Helpers.calculateMonthlyCashFlow(form).toCurrency()}
             prefix="$"
+            suffix="/mo."
             disabled={true}
           />
           <SingleInput
@@ -873,6 +905,7 @@
             inputName="afterRepairValue"
             handleOnChange={handleOnChange}
             prefix="$"
+            required={true}
           />
 
           <SingleInput
@@ -951,7 +984,7 @@
       const handleOnChange = event => {
         setLocalDefaults({
           ...localDefaults,
-          [event.target.name]: Number(event.target.value)
+          [event.target.name]: Number(event.target.value.replace(/\D/g, ""))
         });
       };
 
@@ -1110,7 +1143,7 @@
       const handleOnChange = event => {
         const newForm = {
           ...form,
-          [event.target.name]: Number(event.target.value)
+          [event.target.name]: Number(event.target.value.replace(/\D/g, ""))
         };
         setForm(newForm);
 
@@ -1118,6 +1151,7 @@
       };
 
       const setFormValueByName = (name, value) => {
+        debugger;
         const newForm = {
           ...form,
           [name]: Number(value)
@@ -1155,7 +1189,7 @@
             variant="primary"
             onClick={handleResetNumbersButtonClick}
             className="float-right"
-            style={{ "margin-right": "10px" }}
+            style={{ marginRight: "10px" }}
           >
             Reset Numbers
           </ReactBootstrap.Button>
@@ -1169,7 +1203,11 @@
             />
             <Part3 form={form} handleOnChange={handleOnChange} />
             <Part4 form={form} handleOnChange={handleOnChange} />
-            <Part5 form={form} handleOnChange={handleOnChange} />
+            <Part5
+              form={form}
+              handleOnChange={handleOnChange}
+              setFormValueByName={setFormValueByName}
+            />
             <Part6 form={form} />
             <Part7 form={form} handleOnChange={handleOnChange} />
           </form>
