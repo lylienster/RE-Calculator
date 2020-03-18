@@ -555,9 +555,23 @@
       );
     };
 
-    const Part0 = ({ form, handleOnChange } = props) => {
+    const Part0 = ({ form, handleOnChange, handleTextOnChange } = props) => {
       return (
         <div>
+          <div className="input-group row py-1 ">
+            <label className="col-md-2">Address</label>
+            <div className="col-md-4">
+              <div className="input-group">
+                <input
+                  className={"form-control"}
+                  name={"address"}
+                  value={form.address}
+                  onChange={handleTextOnChange}
+                  type={"text"}
+                />
+              </div>
+            </div>
+          </div>
           <SingleInput
             label="Asking Price"
             inputName="askingPrice"
@@ -1127,6 +1141,7 @@
 
     const Container = () => {
       const initialDefaults = {
+        address: "",
         purchaseClosingCosts: 5000,
         loanPeriod: 30,
         interestRate: 5,
@@ -1161,6 +1176,16 @@
 
           setSavedForm(newForm);
         }
+      };
+
+      const handleTextOnChange = event => {
+        const newForm = {
+          ...form,
+          [event.target.name]: event.target.value
+        };
+        setForm(newForm);
+
+        setSavedForm(newForm);
       };
 
       const setFormValueByName = (name, value) => {
@@ -1206,7 +1231,11 @@
             Reset Numbers
           </ReactBootstrap.Button>
           <form>
-            <Part0 form={form} handleOnChange={handleOnChange} />
+            <Part0
+              form={form}
+              handleOnChange={handleOnChange}
+              handleTextOnChange={handleTextOnChange}
+            />
             <Part1 form={form} handleOnChange={handleOnChange} />
             <Part2
               form={form}
